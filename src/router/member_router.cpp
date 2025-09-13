@@ -1,10 +1,12 @@
 #include "member_router.h"
 
-MemberRouter::MemberRouter(crow::SimpleApp& app, MemberService& service) : app(app), memberService(service) {
+template<typename Middleware>
+MemberRouter<Middleware>::MemberRouter(crow::App<Middleware>& app, MemberService& service) : app(app), memberService(service) {
     // Service는 생성자 매개변수로 전달받음
 }
 
-void MemberRouter::setupRoutes() {
+template<typename Middleware>
+void MemberRouter<Middleware>::setupRoutes() {
     // 모든 멤버 조회 라우트 (GET)
     CROW_ROUTE(app, "/members")
     .methods("GET"_method)
@@ -41,7 +43,8 @@ void MemberRouter::setupRoutes() {
     });
 }
 
-void MemberRouter::getMember(const crow::request& /*req*/, crow::response& res, std::string id) {
+template<typename Middleware>
+void MemberRouter<Middleware>::getMember(const crow::request& /*req*/, crow::response& res, std::string id) {
     if (memberService.memberExists(id)) {
         auto member = memberService.getMemberById(id);
         res.code = 200;
@@ -57,7 +60,8 @@ void MemberRouter::getMember(const crow::request& /*req*/, crow::response& res, 
     res.end();
 }
 
-void MemberRouter::getAllMembers(const crow::request& /*req*/, crow::response& res) {
+template<typename Middleware>
+void MemberRouter<Middleware>::getAllMembers(const crow::request& /*req*/, crow::response& res) {
     // Service에서 모든 멤버 조회
     auto members_list = memberService.getAllMembers();
     
@@ -70,7 +74,8 @@ void MemberRouter::getAllMembers(const crow::request& /*req*/, crow::response& r
     res.end();
 }
 
-void MemberRouter::createMember(const crow::request& req, crow::response& res) {
+template<typename Middleware>
+void MemberRouter<Middleware>::createMember(const crow::request& req, crow::response& res) {
     try {
         // Content-Type 검증
         if (req.get_header_value("Content-Type") != "application/json") {
@@ -172,7 +177,8 @@ void MemberRouter::createMember(const crow::request& req, crow::response& res) {
     res.end();
 }
 
-void MemberRouter::updateMember(const crow::request& req, crow::response& res, std::string id) {
+template<typename Middleware>
+void MemberRouter<Middleware>::updateMember(const crow::request& req, crow::response& res, std::string id) {
     try {
         // Content-Type 검증
         if (req.get_header_value("Content-Type") != "application/json") {
@@ -262,7 +268,8 @@ void MemberRouter::updateMember(const crow::request& req, crow::response& res, s
     res.end();
 }
 
-void MemberRouter::deleteMember(const crow::request& /*req*/, crow::response& res, std::string id) {
+template<typename Middleware>
+void MemberRouter<Middleware>::deleteMember(const crow::request& /*req*/, crow::response& res, std::string id) {
     // Service를 통한 멤버 삭제
     if (memberService.deleteMember(id)) {
         res.code = 200;
@@ -280,3 +287,6 @@ void MemberRouter::deleteMember(const crow::request& /*req*/, crow::response& re
     }
     res.end();
 }
+
+// 명시적 인스턴스 선언
+template class MemberRouter<struct AccessLogMiddleware>;

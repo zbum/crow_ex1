@@ -2,15 +2,17 @@
 
 #include "crow.h"
 #include "../service/product_service.h"
+#include "../middleware/access_log_middleware.h"
 #include <string>
 
+template<typename Middleware>
 class ProductRouter {
 private:
-    crow::SimpleApp& app;
+    crow::App<Middleware>& app;
     ProductService& productService;
 
 public:
-    ProductRouter(crow::SimpleApp& app, ProductService& service);
+    ProductRouter(crow::App<Middleware>& app, ProductService& service);
     
     // 제품 관련 라우트들 설정
     void setupRoutes();

@@ -7,6 +7,7 @@
 #include "repository/mysql_member_repository.h"
 #include "repository/mysql_product_repository.h"
 #include "config/config.h"
+#include "middleware/access_log_middleware.h"
 #include <iostream>
 
 int main(int argc, char* argv[]) {
@@ -30,7 +31,7 @@ int main(int argc, char* argv[]) {
     std::cout << "Server: " << config.getServerConfig().host << ":" 
               << config.getServerConfig().port << " (threads: " << config.getServerConfig().threads << ")" << std::endl;
     
-    crow::SimpleApp app;
+    crow::App<AccessLogMiddleware> app;
     
     // Repository 인스턴스 생성 (설정 전달)
     MySQLMemberRepository memberRepository(config.getDatabaseConfig());
@@ -41,10 +42,10 @@ int main(int argc, char* argv[]) {
     ProductService productService(productRepository);
     
     // 각 도메인별 라우터 생성 및 라우트 설정 (Service 참조 전달)
-    MemberRouter memberRouter(app, memberService);
+    MemberRouter<AccessLogMiddleware> memberRouter(app, memberService);
     memberRouter.setupRoutes();
     
-    ProductRouter productRouter(app, productService);
+    ProductRouter<AccessLogMiddleware> productRouter(app, productService);
     productRouter.setupRoutes();
     
     // 서버 시작 (설정된 포트와 스레드 수 사용)
