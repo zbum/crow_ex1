@@ -1,10 +1,12 @@
 #include "product_router.h"
 
-ProductRouter::ProductRouter(crow::SimpleApp& app, ProductService& service) : app(app), productService(service) {
+template<typename Middleware>
+ProductRouter<Middleware>::ProductRouter(crow::App<Middleware>& app, ProductService& service) : app(app), productService(service) {
     // Service는 생성자 매개변수로 전달받음
 }
 
-void ProductRouter::setupRoutes() {
+template<typename Middleware>
+void ProductRouter<Middleware>::setupRoutes() {
     // 모든 제품 조회 라우트 (GET)
     CROW_ROUTE(app, "/products")
     .methods("GET"_method)
@@ -41,7 +43,8 @@ void ProductRouter::setupRoutes() {
     });
 }
 
-void ProductRouter::getProduct(const crow::request& /*req*/, crow::response& res, std::string id) {
+template<typename Middleware>
+void ProductRouter<Middleware>::getProduct(const crow::request& /*req*/, crow::response& res, std::string id) {
     if (productService.productExists(id)) {
         auto product = productService.getProductById(id);
         res.code = 200;
@@ -57,7 +60,8 @@ void ProductRouter::getProduct(const crow::request& /*req*/, crow::response& res
     res.end();
 }
 
-void ProductRouter::getAllProducts(const crow::request& /*req*/, crow::response& res) {
+template<typename Middleware>
+void ProductRouter<Middleware>::getAllProducts(const crow::request& /*req*/, crow::response& res) {
     // Service에서 모든 제품 조회
     auto products_list = productService.getAllProducts();
     
@@ -70,7 +74,8 @@ void ProductRouter::getAllProducts(const crow::request& /*req*/, crow::response&
     res.end();
 }
 
-void ProductRouter::createProduct(const crow::request& req, crow::response& res) {
+template<typename Middleware>
+void ProductRouter<Middleware>::createProduct(const crow::request& req, crow::response& res) {
     try {
         // JSON 파싱
         auto json_data = crow::json::load(req.body);
@@ -127,7 +132,8 @@ void ProductRouter::createProduct(const crow::request& req, crow::response& res)
     res.end();
 }
 
-void ProductRouter::updateProduct(const crow::request& req, crow::response& res, std::string id) {
+template<typename Middleware>
+void ProductRouter<Middleware>::updateProduct(const crow::request& req, crow::response& res, std::string id) {
     try {
         // JSON 파싱
         auto json_data = crow::json::load(req.body);
@@ -172,7 +178,8 @@ void ProductRouter::updateProduct(const crow::request& req, crow::response& res,
     res.end();
 }
 
-void ProductRouter::deleteProduct(const crow::request& /*req*/, crow::response& res, std::string id) {
+template<typename Middleware>
+void ProductRouter<Middleware>::deleteProduct(const crow::request& /*req*/, crow::response& res, std::string id) {
     // Service를 통한 제품 삭제
     if (productService.deleteProduct(id)) {
         res.code = 200;
@@ -190,3 +197,6 @@ void ProductRouter::deleteProduct(const crow::request& /*req*/, crow::response& 
     }
     res.end();
 }
+
+// 명시적 인스턴스 선언
+template class ProductRouter<struct AccessLogMiddleware>;

@@ -2,15 +2,17 @@
 
 #include "crow.h"
 #include "../service/member_service.h"
+#include "../middleware/access_log_middleware.h"
 #include <string>
 
+template<typename Middleware>
 class MemberRouter {
 private:
-    crow::SimpleApp& app;
+    crow::App<Middleware>& app;
     MemberService& memberService;
 
 public:
-    MemberRouter(crow::SimpleApp& app, MemberService& service);
+    MemberRouter(crow::App<Middleware>& app, MemberService& service);
     
     // 멤버 관련 라우트들 설정
     void setupRoutes();

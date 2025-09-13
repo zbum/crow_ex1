@@ -2,11 +2,11 @@
 
 # Database Configuration
 database:
-  host: "localhost"
+  host: "127.0.0.1"
   port: 3306
-  username: "dev_user"
-  password: "dev_password"
-  database: "crow_development"
+  username: "root"
+  password: "test"
+  database: "crow_ex1"
 
 # Server Configuration
 server:
