@@ -1,0 +1,15 @@
+# Crow API Server Configuration
+
+# Database Configuration
+database:
+  host: "127.0.0.1"
+  port: 3306
+  username: "root"
+  password: "test"
+  database: "crow_ex1"
+
+# Server Configuration
+server:
+  host: "0.0.0.0"
+  port: 8080
+  threads: 10

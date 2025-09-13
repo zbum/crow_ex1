@@ -1,0 +1,35 @@
+#pragma once
+
+#include "crow.h"
+#include <mysql/mysql.h>
+#include <string>
+#include <vector>
+#include "../config/config.h"
+
+class MySQLMemberRepository {
+private:
+    MYSQL* mysql;
+    DatabaseConfig dbConfig;
+
+public:
+    MySQLMemberRepository(const DatabaseConfig& config);
+    ~MySQLMemberRepository();
+    
+    // 모든 멤버 조회
+    std::vector<crow::json::wvalue> getAllMembers();
+    
+    // ID로 멤버 조회
+    crow::json::wvalue getMemberById(const std::string& id);
+    
+    // 멤버 존재 여부 확인
+    bool memberExists(const std::string& id);
+    
+    // 멤버 추가
+    void addMember(const std::string& id, const crow::json::wvalue& member);
+    
+    // 멤버 업데이트
+    void updateMember(const std::string& id, const crow::json::wvalue& member);
+    
+    // 멤버 삭제
+    void deleteMember(const std::string& id);
+};
