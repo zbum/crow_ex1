@@ -163,6 +163,45 @@ curl -X POST http://localhost:8080/products \
 curl http://localhost:8080/products
 ```
 
+## Testing
+
+The project includes comprehensive testing with organized test structure:
+
+### Test Directory Structure
+
+```
+tests/
+├── bench/                    # Performance tests
+│   ├── benchmark_test.cpp   # C++ performance benchmarks
+│   └── test_api_performance.sh # HTTP API performance tests
+└── unit/                    # Functional tests
+    ├── functional_test.cpp  # Core functionality tests
+    ├── test_*.cpp          # Individual unit tests
+    └── test_helper.h       # Test utilities
+```
+
+### Running Tests
+
+```bash
+# Functional tests (unit tests)
+make test
+
+# Performance benchmarks
+make benchmark
+
+# HTTP API performance tests
+make test-api
+
+# Clean test artifacts
+make clean
+```
+
+### Test Types
+
+- **Unit Tests**: Test individual components and functions
+- **Performance Tests**: Measure execution time and resource usage
+- **API Tests**: Test HTTP endpoints and response times
+
 ## Architecture
 
 The application follows a layered architecture:

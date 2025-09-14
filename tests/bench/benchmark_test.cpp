@@ -3,12 +3,12 @@
 #include <random>
 #include <thread>
 #include <chrono>
-#include "../src/utils/benchmark.h"
-#include "../src/config/config.h"
-#include "../src/repository/mysql_member_repository.h"
-#include "../src/repository/mysql_product_repository.h"
-#include "../src/service/member_service.h"
-#include "../src/service/product_service.h"
+#include "../../src/utils/benchmark.h"
+#include "../../src/config/config.h"
+#include "../../src/repository/mysql_member_repository.h"
+#include "../../src/repository/mysql_product_repository.h"
+#include "../../src/service/member_service.h"
+#include "../../src/service/product_service.h"
 
 // 간단한 성능 테스트 함수들
 void testDatabaseConnection() {

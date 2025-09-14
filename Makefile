@@ -11,10 +11,12 @@ STATIC_LDFLAGS = -pthread -L/opt/homebrew/opt/mysql-client/lib -L/opt/homebrew/o
 TARGET = crow_ex1
 STATIC_TARGET = crow_ex1_static
 BENCHMARK_TARGET = benchmark_test
+TEST_TARGET = functional_test
 
 # 소스 파일
 SOURCES = src/main.cpp src/router/member_router.cpp src/router/product_router.cpp src/service/member_service.cpp src/service/product_service.cpp src/repository/mysql_member_repository.cpp src/repository/mysql_product_repository.cpp src/config/config.cpp
-BENCHMARK_SOURCES = tests/benchmark_test.cpp src/router/member_router.cpp src/router/product_router.cpp src/service/member_service.cpp src/service/product_service.cpp src/repository/mysql_member_repository.cpp src/repository/mysql_product_repository.cpp src/config/config.cpp
+BENCHMARK_SOURCES = tests/bench/benchmark_test.cpp src/router/member_router.cpp src/router/product_router.cpp src/service/member_service.cpp src/service/product_service.cpp src/repository/mysql_member_repository.cpp src/repository/mysql_product_repository.cpp src/config/config.cpp
+TEST_SOURCES = tests/unit/functional_test.cpp src/config/config.cpp
 
 # 기본 타겟
 all: $(TARGET)
@@ -34,6 +36,10 @@ $(STATIC_TARGET): $(SOURCES)
 $(BENCHMARK_TARGET): $(BENCHMARK_SOURCES)
 	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(BENCHMARK_TARGET) $(BENCHMARK_SOURCES)
 
+# 기능 테스트 실행 파일 생성 규칙
+$(TEST_TARGET): $(TEST_SOURCES)
+	$(CXX) $(CXXFLAGS) $(LDFLAGS) -o $(TEST_TARGET) $(TEST_SOURCES)
+
 # 실행
 run: $(TARGET)
 	./$(TARGET)
@@ -41,6 +47,10 @@ run: $(TARGET)
 # Static 실행
 run-static: $(STATIC_TARGET)
 	./$(STATIC_TARGET)
+
+# 기능 테스트 실행
+test: $(TEST_TARGET)
+	./$(TEST_TARGET)
 
 # 벤치마크 실행
 benchmark: $(BENCHMARK_TARGET)
@@ -52,12 +62,12 @@ test-api: $(TARGET)
 	@./$(TARGET) &
 	@SERVER_PID=$$!; \
 	sleep 2; \
-	./tests/test_api_performance.sh; \
+	./tests/bench/test_api_performance.sh; \
 	kill $$SERVER_PID 2>/dev/null || true
 
 # 정리
 clean:
-	rm -f $(TARGET) $(STATIC_TARGET) $(BENCHMARK_TARGET)
+	rm -f $(TARGET) $(STATIC_TARGET) $(BENCHMARK_TARGET) $(TEST_TARGET)
 
 # 도움말
 help:
@@ -66,9 +76,10 @@ help:
 	@echo "  make static       - 프로그램 컴파일 (정적 링크)"
 	@echo "  make run          - 프로그램 컴파일 후 실행 (동적 링크)"
 	@echo "  make run-static   - 프로그램 컴파일 후 실행 (정적 링크)"
+	@echo "  make test         - 기능 테스트 실행"
 	@echo "  make benchmark    - 성능 벤치마크 테스트 실행"
 	@echo "  make test-api     - HTTP API 성능 테스트 실행"
 	@echo "  make clean        - 생성된 파일 정리"
 	@echo "  make help         - 이 도움말 표시"
 
-.PHONY: all static run run-static benchmark test-api clean help
+.PHONY: all static run run-static test benchmark test-api clean help
