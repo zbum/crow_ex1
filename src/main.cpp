@@ -6,9 +6,11 @@
 #include "service/product_service.h"
 #include "repository/mysql_member_repository.h"
 #include "repository/mysql_product_repository.h"
+#include "repository/mysql_connection_pool.h"
 #include "config/config.h"
 #include "middleware/access_log_middleware.h"
 #include <iostream>
+#include <memory>
 
 int main(int argc, char* argv[]) {
     // 설정 파일 경로 (기본값: config.yaml)
@@ -33,9 +35,12 @@ int main(int argc, char* argv[]) {
     
     crow::App<AccessLogMiddleware> app;
     
-    // Repository 인스턴스 생성 (설정 전달)
-    MySQLMemberRepository memberRepository(config.getDatabaseConfig());
-    MySQLProductRepository productRepository(config.getDatabaseConfig());
+    // MySQL 연결 풀 생성
+    auto connectionPool = std::make_shared<MySQLConnectionPool>(config.getDatabaseConfig(), 10);
+    
+    // Repository 인스턴스 생성 (연결 풀 전달)
+    MySQLMemberRepository memberRepository(connectionPool);
+    MySQLProductRepository productRepository(connectionPool);
     
     // Service 인스턴스 생성 (Repository 참조 전달)
     MemberService memberService(memberRepository);
