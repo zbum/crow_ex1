@@ -1,38 +1,20 @@
 #include "mysql_member_repository.h"
 
-MySQLMemberRepository::MySQLMemberRepository(const DatabaseConfig& config) : dbConfig(config) {
-    mysql = mysql_init(NULL);
-    if (mysql == NULL) {
-        std::cerr << "Error initializing MySQL" << std::endl;
-        throw std::runtime_error("MySQL initialization failed");
-    }
-    
-    if (mysql_real_connect(mysql, dbConfig.host.c_str(), dbConfig.username.c_str(), 
-                          dbConfig.password.c_str(), dbConfig.database.c_str(), 
-                          dbConfig.port, NULL, 0) == NULL) {
-        std::cerr << "Error connecting to MySQL: " << mysql_error(mysql) << std::endl;
-        mysql_close(mysql);
-        throw std::runtime_error("MySQL connection failed");
-    }
-}
-
-MySQLMemberRepository::~MySQLMemberRepository() {
-    if (mysql) {
-        mysql_close(mysql);
-    }
+MySQLMemberRepository::MySQLMemberRepository(std::shared_ptr<MySQLConnectionPool> pool) : connectionPool(pool) {
 }
 
 std::vector<crow::json::wvalue> MySQLMemberRepository::getAllMembers() {
     std::vector<crow::json::wvalue> members_list;
+    auto mysql = connectionPool->getConnection();
     
-    if (mysql_query(mysql, "SELECT id, name, gender FROM members")) {
-        std::cerr << "Error querying members: " << mysql_error(mysql) << std::endl;
+    if (mysql_query(mysql.get(), "SELECT id, name, gender FROM members")) {
+        std::cerr << "Error querying members: " << mysql_error(mysql.get()) << std::endl;
         return members_list;
     }
     
-    MYSQL_RES* result = mysql_store_result(mysql);
+    MYSQL_RES* result = mysql_store_result(mysql.get());
     if (result == NULL) {
-        std::cerr << "Error storing result: " << mysql_error(mysql) << std::endl;
+        std::cerr << "Error storing result: " << mysql_error(mysql.get()) << std::endl;
         return members_list;
     }
     
@@ -42,7 +24,7 @@ std::vector<crow::json::wvalue> MySQLMemberRepository::getAllMembers() {
         member_obj["id"] = std::string(row[0]);
         member_obj["name"] = std::string(row[1]);
         member_obj["gender"] = std::string(row[2]);
-        members_list.emplace_back(std::move(member_obj));
+        members_list.push_back(member_obj);
     }
     
     mysql_free_result(result);
@@ -51,15 +33,16 @@ std::vector<crow::json::wvalue> MySQLMemberRepository::getAllMembers() {
 
 crow::json::wvalue MySQLMemberRepository::getMemberById(const std::string& id) {
     std::string query = "SELECT id, name, gender FROM members WHERE id = '" + id + "'";
+    auto mysql = connectionPool->getConnection();
     
-    if (mysql_query(mysql, query.c_str())) {
-        std::cerr << "Error querying member: " << mysql_error(mysql) << std::endl;
+    if (mysql_query(mysql.get(), query.c_str())) {
+        std::cerr << "Error querying member: " << mysql_error(mysql.get()) << std::endl;
         return crow::json::wvalue();
     }
     
-    MYSQL_RES* result = mysql_store_result(mysql);
+    MYSQL_RES* result = mysql_store_result(mysql.get());
     if (result == NULL) {
-        std::cerr << "Error storing result: " << mysql_error(mysql) << std::endl;
+        std::cerr << "Error storing result: " << mysql_error(mysql.get()) << std::endl;
         return crow::json::wvalue();
     }
     
@@ -79,15 +62,16 @@ crow::json::wvalue MySQLMemberRepository::getMemberById(const std::string& id) {
 
 bool MySQLMemberRepository::memberExists(const std::string& id) {
     std::string query = "SELECT COUNT(*) FROM members WHERE id = '" + id + "'";
+    auto mysql = connectionPool->getConnection();
     
-    if (mysql_query(mysql, query.c_str())) {
-        std::cerr << "Error checking member existence: " << mysql_error(mysql) << std::endl;
+    if (mysql_query(mysql.get(), query.c_str())) {
+        std::cerr << "Error checking member existence: " << mysql_error(mysql.get()) << std::endl;
         return false;
     }
     
-    MYSQL_RES* result = mysql_store_result(mysql);
+    MYSQL_RES* result = mysql_store_result(mysql.get());
     if (result == NULL) {
-        std::cerr << "Error storing result: " << mysql_error(mysql) << std::endl;
+        std::cerr << "Error storing result: " << mysql_error(mysql.get()) << std::endl;
         return false;
     }
     
@@ -106,9 +90,10 @@ void MySQLMemberRepository::addMember(const std::string& id, const crow::json::w
     std::string gender = std::string(member["gender"].dump()).substr(1, std::string(member["gender"].dump()).length() - 2);
     
     std::string query = "INSERT INTO members (id, name, gender) VALUES ('" + id + "', '" + name + "', '" + gender + "')";
+    auto mysql = connectionPool->getConnection();
     
-    if (mysql_query(mysql, query.c_str())) {
-        std::cerr << "Error adding member: " << mysql_error(mysql) << std::endl;
+    if (mysql_query(mysql.get(), query.c_str())) {
+        std::cerr << "Error adding member: " << mysql_error(mysql.get()) << std::endl;
     }
 }
 
@@ -117,16 +102,18 @@ void MySQLMemberRepository::updateMember(const std::string& id, const crow::json
     std::string gender = std::string(member["gender"].dump()).substr(1, std::string(member["gender"].dump()).length() - 2);
     
     std::string query = "UPDATE members SET name = '" + name + "', gender = '" + gender + "' WHERE id = '" + id + "'";
+    auto mysql = connectionPool->getConnection();
     
-    if (mysql_query(mysql, query.c_str())) {
-        std::cerr << "Error updating member: " << mysql_error(mysql) << std::endl;
+    if (mysql_query(mysql.get(), query.c_str())) {
+        std::cerr << "Error updating member: " << mysql_error(mysql.get()) << std::endl;
     }
 }
 
 void MySQLMemberRepository::deleteMember(const std::string& id) {
     std::string query = "DELETE FROM members WHERE id = '" + id + "'";
+    auto mysql = connectionPool->getConnection();
     
-    if (mysql_query(mysql, query.c_str())) {
-        std::cerr << "Error deleting member: " << mysql_error(mysql) << std::endl;
+    if (mysql_query(mysql.get(), query.c_str())) {
+        std::cerr << "Error deleting member: " << mysql_error(mysql.get()) << std::endl;
     }
 }

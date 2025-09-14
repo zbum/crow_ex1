@@ -4,16 +4,17 @@
 #include <mysql/mysql.h>
 #include <string>
 #include <vector>
+#include <memory>
 #include "../config/config.h"
+#include "mysql_connection_pool.h"
 
 class MySQLMemberRepository {
 private:
-    MYSQL* mysql;
-    DatabaseConfig dbConfig;
+    std::shared_ptr<MySQLConnectionPool> connectionPool;
 
 public:
-    MySQLMemberRepository(const DatabaseConfig& config);
-    ~MySQLMemberRepository();
+    MySQLMemberRepository(std::shared_ptr<MySQLConnectionPool> pool);
+    ~MySQLMemberRepository() = default;
     
     // 모든 멤버 조회
     std::vector<crow::json::wvalue> getAllMembers();

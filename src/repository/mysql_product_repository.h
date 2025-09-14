@@ -4,16 +4,17 @@
 #include <mysql/mysql.h>
 #include <string>
 #include <vector>
+#include <memory>
 #include "../config/config.h"
+#include "mysql_connection_pool.h"
 
 class MySQLProductRepository {
 private:
-    MYSQL* mysql;
-    DatabaseConfig dbConfig;
+    std::shared_ptr<MySQLConnectionPool> connectionPool;
 
 public:
-    MySQLProductRepository(const DatabaseConfig& config);
-    ~MySQLProductRepository();
+    MySQLProductRepository(std::shared_ptr<MySQLConnectionPool> pool);
+    ~MySQLProductRepository() = default;
     
     // 모든 제품 조회
     std::vector<crow::json::wvalue> getAllProducts();

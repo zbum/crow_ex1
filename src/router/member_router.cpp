@@ -65,8 +65,9 @@ void MemberRouter<Middleware>::getAllMembers(const crow::request& /*req*/, crow:
     // Service에서 모든 멤버 조회
     auto members_list = memberService.getAllMembers();
     
-    // vector를 wvalue로 변환
-    crow::json::wvalue members_array(std::move(members_list));
+    // vector를 wvalue로 변환 (복사 대신 이동 시맨틱 사용)
+    crow::json::wvalue members_array;
+    members_array = std::move(members_list);
     
     res.code = 200;
     res.set_header("Content-Type", "application/json");
