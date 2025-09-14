@@ -1,6 +1,7 @@
 # Build outputs
 crow_ex1
 crow_ex1_static
+benchmark_test
 *.o
 *.obj
 *.exe
