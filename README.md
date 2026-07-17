@@ -68,48 +68,94 @@ server:
 
 ### Prerequisites
 
-- C++17 compatible compiler
+- C++17 compatible compiler (GCC 7+, Clang 5+, or MSVC 2019+)
+- CMake 3.15 or later
 - MySQL client library
 - yaml-cpp library
 
 ### Install Dependencies (macOS)
 
 ```bash
-brew install mysql-client yaml-cpp
+brew install mysql-client yaml-cpp cmake
 ```
 
-### Compile
+### Install Dependencies (Ubuntu/Debian)
 
 ```bash
-# Dynamic linking (default)
-make clean
-make
+sudo apt-get update
+sudo apt-get install build-essential cmake libmysqlclient-dev libyaml-cpp-dev
+```
 
-# Static linking (for deployment)
-make clean
-make static
+### Build with CMake
+
+#### Quick Build
+
+```bash
+# Build with default settings (Release mode)
+./build.sh
+
+# Build debug version
+./build.sh debug
+
+# Build release version
+./build.sh release
+
+# Clean build directories
+./build.sh clean
+```
+
+#### Manual CMake Build
+
+```bash
+# Create build directory
+mkdir build && cd build
+
+# Configure
+cmake .. -DCMAKE_BUILD_TYPE=Release
+
+# Build
+cmake --build . --parallel
+
+# Or use preset
+cmake --preset=default
+cmake --build --preset=default
+```
+
+#### Build Options
+
+```bash
+# Configure with options
+cmake .. \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DBUILD_TESTS=ON \
+    -DBUILD_BENCHMARKS=ON
+
+# Build specific target
+cmake --build . --target crow_ex1
+
+# Build all targets
+cmake --build . --target all
 ```
 
 ### Run
 
 ```bash
 # Default configuration
-./crow_ex1
+./build/crow_ex1
 
 # Custom configuration
-./crow_ex1 config.development.yaml
+./build/crow_ex1 config.development.yaml
 
-# Static build
-./crow_ex1_static config.yaml
+# From build directory
+cd build && ./crow_ex1
 ```
 
-### Static Build
+### Build Types
 
-The static build (`crow_ex1_static`) includes most dependencies statically linked, making it more portable across different systems. However, some system libraries (OpenSSL, zlib, zstd, yaml-cpp) may still be required on the target system.
-
-**File sizes:**
-- Dynamic build: ~300KB
-- Static build: ~9.9MB
+- **Debug**: Full debugging symbols, no optimization
+- **Release**: Full optimization, no debugging symbols
+- **RelWithDebInfo**: Optimization with debugging symbols
+- **MinSizeRel**: Size optimization
 
 ## Database Setup
 
@@ -165,7 +211,7 @@ curl http://localhost:8080/products
 
 ## Testing
 
-The project includes comprehensive testing with organized test structure:
+The project includes comprehensive testing with organized test structure using CMake's CTest framework:
 
 ### Test Directory Structure
 
@@ -182,18 +228,45 @@ tests/
 
 ### Running Tests
 
+#### Using Build Script
+
 ```bash
-# Functional tests (unit tests)
-make test
+# Run tests after building
+./build.sh test
 
-# Performance benchmarks
-make benchmark
+# Run benchmarks after building
+./build.sh benchmark
+```
 
-# HTTP API performance tests
-make test-api
+#### Using CMake/CTest
 
-# Clean test artifacts
-make clean
+```bash
+# Build with tests enabled
+cmake .. -DBUILD_TESTS=ON -DBUILD_BENCHMARKS=ON
+cmake --build .
+
+# Run all tests
+ctest --output-on-failure
+
+# Run specific test
+ctest -R functional_test
+
+# Run tests in verbose mode
+ctest --verbose
+
+# Run tests with parallel execution
+ctest --parallel 4
+```
+
+#### Using CMake Presets
+
+```bash
+# Configure and build with tests
+cmake --preset=default
+cmake --build --preset=default
+
+# Run tests
+ctest --preset=default
 ```
 
 ### Test Types
