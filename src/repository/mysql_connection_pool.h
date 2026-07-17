@@ -6,6 +6,9 @@
 #include <memory>
 #include <condition_variable>
 #include <thread>
+#include <iostream>
+#include <stdexcept>
+#include <string>
 #include "../config/config.h"
 
 class MySQLConnectionPool {
@@ -68,16 +71,19 @@ private:
     MYSQL* createConnection() {
         MYSQL* mysql = mysql_init(NULL);
         if (mysql == NULL) {
-            std::cerr << "Error initializing MySQL" << std::endl;
-            return nullptr;
+            throw std::runtime_error("Error initializing MySQL");
         }
         
         if (mysql_real_connect(mysql, dbConfig.host.c_str(), dbConfig.username.c_str(), 
                               dbConfig.password.c_str(), dbConfig.database.c_str(), 
                               dbConfig.port, NULL, 0) == NULL) {
-            std::cerr << "Error connecting to MySQL: " << mysql_error(mysql) << std::endl;
+            std::string error = mysql_error(mysql);
             mysql_close(mysql);
-            return nullptr;
+            throw std::runtime_error(
+                "Error connecting to MySQL at " + dbConfig.host + ":" +
+                std::to_string(dbConfig.port) + "/" + dbConfig.database +
+                " as user '" + dbConfig.username + "': " + error
+            );
         }
         
         return mysql;

@@ -54,7 +54,7 @@ void Config::setDefaults() {
     dbConfig.port = 3306;
     dbConfig.username = "root";
     dbConfig.password = "test";
-    dbConfig.database = "crow_ex1";
+    dbConfig.database = "test";
     
     // Server 기본값
     serverConfig.host = "0.0.0.0";

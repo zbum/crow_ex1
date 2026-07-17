@@ -1,6 +1,6 @@
 -- 데이터베이스 생성
-CREATE DATABASE IF NOT EXISTS crow_ex1;
-USE crow_ex1;
+CREATE DATABASE IF NOT EXISTS test;
+USE test;
 
 -- 멤버 테이블 생성
 CREATE TABLE IF NOT EXISTS members (

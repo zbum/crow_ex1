@@ -45,16 +45,25 @@ void MemberRouter<Middleware>::setupRoutes() {
 
 template<typename Middleware>
 void MemberRouter<Middleware>::getMember(const crow::request& /*req*/, crow::response& res, std::string id) {
-    if (memberService.memberExists(id)) {
-        auto member = memberService.getMemberById(id);
-        res.code = 200;
-        res.set_header("Content-Type", "application/json");
-        res.write(member.dump());
-    } else {
-        res.code = 404;
+    try {
+        if (memberService.memberExists(id)) {
+            auto member = memberService.getMemberById(id);
+            res.code = 200;
+            res.set_header("Content-Type", "application/json");
+            res.write(member.dump());
+        } else {
+            res.code = 404;
+            res.set_header("Content-Type", "application/json");
+            res.write(crow::json::wvalue({
+                {"error", "Member not found"}
+            }).dump());
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error getting member: " << e.what() << std::endl;
+        res.code = 500;
         res.set_header("Content-Type", "application/json");
         res.write(crow::json::wvalue({
-            {"error", "Member not found"}
+            {"error", "Internal server error"}
         }).dump());
     }
     res.end();
@@ -62,16 +71,25 @@ void MemberRouter<Middleware>::getMember(const crow::request& /*req*/, crow::res
 
 template<typename Middleware>
 void MemberRouter<Middleware>::getAllMembers(const crow::request& /*req*/, crow::response& res) {
-    // Service에서 모든 멤버 조회
-    auto members_list = memberService.getAllMembers();
-    
-    // vector를 wvalue로 변환 (복사 대신 이동 시맨틱 사용)
-    crow::json::wvalue members_array;
-    members_array = std::move(members_list);
-    
-    res.code = 200;
-    res.set_header("Content-Type", "application/json");
-    res.write(members_array.dump());
+    try {
+        // Service에서 모든 멤버 조회
+        auto members_list = memberService.getAllMembers();
+
+        // vector를 wvalue로 변환 (복사 대신 이동 시맨틱 사용)
+        crow::json::wvalue members_array;
+        members_array = std::move(members_list);
+
+        res.code = 200;
+        res.set_header("Content-Type", "application/json");
+        res.write(members_array.dump());
+    } catch (const std::exception& e) {
+        std::cerr << "Error getting members: " << e.what() << std::endl;
+        res.code = 500;
+        res.set_header("Content-Type", "application/json");
+        res.write(crow::json::wvalue({
+            {"error", "Internal server error"}
+        }).dump());
+    }
     res.end();
 }
 
@@ -168,7 +186,15 @@ void MemberRouter<Middleware>::createMember(const crow::request& req, crow::resp
                 {"error", "Member already exists or invalid data format"}
             }).dump());
         }
+    } catch (const DuplicateMemberError& e) {
+        std::cerr << "Member conflict: " << e.what() << std::endl;
+        res.code = 409;
+        res.set_header("Content-Type", "application/json");
+        res.write(crow::json::wvalue({
+            {"error", "Member already exists"}
+        }).dump());
     } catch (const std::exception& e) {
+        std::cerr << "Error creating member: " << e.what() << std::endl;
         res.code = 500;
         res.set_header("Content-Type", "application/json");
         res.write(crow::json::wvalue({
@@ -260,6 +286,7 @@ void MemberRouter<Middleware>::updateMember(const crow::request& req, crow::resp
             }).dump());
         }
     } catch (const std::exception& e) {
+        std::cerr << "Error updating member: " << e.what() << std::endl;
         res.code = 500;
         res.set_header("Content-Type", "application/json");
         res.write(crow::json::wvalue({
@@ -271,19 +298,28 @@ void MemberRouter<Middleware>::updateMember(const crow::request& req, crow::resp
 
 template<typename Middleware>
 void MemberRouter<Middleware>::deleteMember(const crow::request& /*req*/, crow::response& res, std::string id) {
-    // Service를 통한 멤버 삭제
-    if (memberService.deleteMember(id)) {
-        res.code = 200;
+    try {
+        // Service를 통한 멤버 삭제
+        if (memberService.deleteMember(id)) {
+            res.code = 200;
+            res.set_header("Content-Type", "application/json");
+            res.write(crow::json::wvalue({
+                {"message", "Member deleted successfully"},
+                {"id", id}
+            }).dump());
+        } else {
+            res.code = 404;
+            res.set_header("Content-Type", "application/json");
+            res.write(crow::json::wvalue({
+                {"error", "Member not found"}
+            }).dump());
+        }
+    } catch (const std::exception& e) {
+        std::cerr << "Error deleting member: " << e.what() << std::endl;
+        res.code = 500;
         res.set_header("Content-Type", "application/json");
         res.write(crow::json::wvalue({
-            {"message", "Member deleted successfully"},
-            {"id", id}
-        }).dump());
-    } else {
-        res.code = 404;
-        res.set_header("Content-Type", "application/json");
-        res.write(crow::json::wvalue({
-            {"error", "Member not found"}
+            {"error", "Internal server error"}
         }).dump());
     }
     res.end();

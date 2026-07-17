@@ -64,7 +64,7 @@ void testConfig(TestFramework& tf) {
     
     tf.assertEqual("127.0.0.1", dbConfig.host, "Default database host");
     tf.assertEqual("root", dbConfig.username, "Default database username");
-    tf.assertEqual("crow_ex1", dbConfig.database, "Default database name");
+    tf.assertEqual("test", dbConfig.database, "Default database name");
     tf.assertEqual("0.0.0.0", serverConfig.host, "Default server host");
     tf.assertTrue(serverConfig.port == 8080, "Default server port");
     tf.assertTrue(serverConfig.threads == 10, "Default server threads");

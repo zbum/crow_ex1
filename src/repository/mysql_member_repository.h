@@ -2,11 +2,17 @@
 
 #include "crow.h"
 #include <mysql/mysql.h>
+#include <stdexcept>
 #include <string>
 #include <vector>
 #include <memory>
 #include "../config/config.h"
 #include "mysql_connection_pool.h"
+
+class DuplicateMemberError : public std::runtime_error {
+public:
+    explicit DuplicateMemberError(const std::string& message) : std::runtime_error(message) {}
+};
 
 class MySQLMemberRepository {
 private:
@@ -26,11 +32,11 @@ public:
     bool memberExists(const std::string& id);
     
     // 멤버 추가
-    void addMember(const std::string& id, const crow::json::wvalue& member);
+    bool addMember(const std::string& id, const crow::json::wvalue& member);
     
     // 멤버 업데이트
-    void updateMember(const std::string& id, const crow::json::wvalue& member);
+    bool updateMember(const std::string& id, const crow::json::wvalue& member);
     
     // 멤버 삭제
-    void deleteMember(const std::string& id);
+    bool deleteMember(const std::string& id);
 };

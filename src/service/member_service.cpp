@@ -28,14 +28,8 @@ bool MemberService::addMember(const std::string& id, const crow::json::wvalue& m
         return false;
     }
     
-    // 중복 ID 체크
-    if (memberRepository.memberExists(id)) {
-        return false;
-    }
-    
     // 멤버 추가
-    memberRepository.addMember(id, member);
-    return true;
+    return memberRepository.addMember(id, member);
 }
 
 bool MemberService::updateMember(const std::string& id, const crow::json::wvalue& member) {
@@ -50,8 +44,7 @@ bool MemberService::updateMember(const std::string& id, const crow::json::wvalue
     }
     
     // 멤버 업데이트
-    memberRepository.updateMember(id, member);
-    return true;
+    return memberRepository.updateMember(id, member);
 }
 
 bool MemberService::deleteMember(const std::string& id) {
@@ -66,8 +59,7 @@ bool MemberService::deleteMember(const std::string& id) {
     }
     
     // 멤버 삭제
-    memberRepository.deleteMember(id);
-    return true;
+    return memberRepository.deleteMember(id);
 }
 
 bool MemberService::validateMember(const crow::json::wvalue& member) {

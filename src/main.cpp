@@ -9,6 +9,8 @@
 #include "repository/mysql_connection_pool.h"
 #include "config/config.h"
 #include "middleware/access_log_middleware.h"
+#include <cstdlib>
+#include <exception>
 #include <iostream>
 #include <memory>
 
@@ -37,6 +39,13 @@ int main(int argc, char* argv[]) {
     
     // MySQL 연결 풀 생성
     auto connectionPool = std::make_shared<MySQLConnectionPool>(config.getDatabaseConfig(), 10);
+    try {
+        auto connection = connectionPool->getConnection();
+        std::cout << "Database connection established" << std::endl;
+    } catch (const std::exception& e) {
+        std::cerr << "Fatal: failed to connect to database: " << e.what() << std::endl;
+        std::abort();
+    }
     
     // Repository 인스턴스 생성 (연결 풀 전달)
     MySQLMemberRepository memberRepository(connectionPool);
