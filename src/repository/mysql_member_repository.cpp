@@ -8,14 +8,12 @@ std::vector<crow::json::wvalue> MySQLMemberRepository::getAllMembers() {
     auto mysql = connectionPool->getConnection();
     
     if (mysql_query(mysql.get(), "SELECT id, name, gender FROM members")) {
-        std::cerr << "Error querying members: " << mysql_error(mysql.get()) << std::endl;
-        return members_list;
+        throw std::runtime_error(std::string("Error querying members: ") + mysql_error(mysql.get()));
     }
     
     MYSQL_RES* result = mysql_store_result(mysql.get());
     if (result == NULL) {
-        std::cerr << "Error storing result: " << mysql_error(mysql.get()) << std::endl;
-        return members_list;
+        throw std::runtime_error(std::string("Error storing members result: ") + mysql_error(mysql.get()));
     }
     
     MYSQL_ROW row;
@@ -36,14 +34,12 @@ crow::json::wvalue MySQLMemberRepository::getMemberById(const std::string& id) {
     auto mysql = connectionPool->getConnection();
     
     if (mysql_query(mysql.get(), query.c_str())) {
-        std::cerr << "Error querying member: " << mysql_error(mysql.get()) << std::endl;
-        return crow::json::wvalue();
+        throw std::runtime_error(std::string("Error querying member: ") + mysql_error(mysql.get()));
     }
     
     MYSQL_RES* result = mysql_store_result(mysql.get());
     if (result == NULL) {
-        std::cerr << "Error storing result: " << mysql_error(mysql.get()) << std::endl;
-        return crow::json::wvalue();
+        throw std::runtime_error(std::string("Error storing member result: ") + mysql_error(mysql.get()));
     }
     
     MYSQL_ROW row = mysql_fetch_row(result);
@@ -65,14 +61,12 @@ bool MySQLMemberRepository::memberExists(const std::string& id) {
     auto mysql = connectionPool->getConnection();
     
     if (mysql_query(mysql.get(), query.c_str())) {
-        std::cerr << "Error checking member existence: " << mysql_error(mysql.get()) << std::endl;
-        return false;
+        throw std::runtime_error(std::string("Error checking member existence: ") + mysql_error(mysql.get()));
     }
     
     MYSQL_RES* result = mysql_store_result(mysql.get());
     if (result == NULL) {
-        std::cerr << "Error storing result: " << mysql_error(mysql.get()) << std::endl;
-        return false;
+        throw std::runtime_error(std::string("Error storing member existence result: ") + mysql_error(mysql.get()));
     }
     
     MYSQL_ROW row = mysql_fetch_row(result);
@@ -85,7 +79,7 @@ bool MySQLMemberRepository::memberExists(const std::string& id) {
     return exists;
 }
 
-void MySQLMemberRepository::addMember(const std::string& id, const crow::json::wvalue& member) {
+bool MySQLMemberRepository::addMember(const std::string& id, const crow::json::wvalue& member) {
     std::string name = std::string(member["name"].dump()).substr(1, std::string(member["name"].dump()).length() - 2);
     std::string gender = std::string(member["gender"].dump()).substr(1, std::string(member["gender"].dump()).length() - 2);
     
@@ -93,11 +87,15 @@ void MySQLMemberRepository::addMember(const std::string& id, const crow::json::w
     auto mysql = connectionPool->getConnection();
     
     if (mysql_query(mysql.get(), query.c_str())) {
-        std::cerr << "Error adding member: " << mysql_error(mysql.get()) << std::endl;
+        if (mysql_errno(mysql.get()) == 1062) {
+            throw DuplicateMemberError(std::string("Member already exists: ") + mysql_error(mysql.get()));
+        }
+        throw std::runtime_error(std::string("Error adding member: ") + mysql_error(mysql.get()));
     }
+    return mysql_affected_rows(mysql.get()) == 1;
 }
 
-void MySQLMemberRepository::updateMember(const std::string& id, const crow::json::wvalue& member) {
+bool MySQLMemberRepository::updateMember(const std::string& id, const crow::json::wvalue& member) {
     std::string name = std::string(member["name"].dump()).substr(1, std::string(member["name"].dump()).length() - 2);
     std::string gender = std::string(member["gender"].dump()).substr(1, std::string(member["gender"].dump()).length() - 2);
     
@@ -105,15 +103,17 @@ void MySQLMemberRepository::updateMember(const std::string& id, const crow::json
     auto mysql = connectionPool->getConnection();
     
     if (mysql_query(mysql.get(), query.c_str())) {
-        std::cerr << "Error updating member: " << mysql_error(mysql.get()) << std::endl;
+        throw std::runtime_error(std::string("Error updating member: ") + mysql_error(mysql.get()));
     }
+    return mysql_affected_rows(mysql.get()) > 0;
 }
 
-void MySQLMemberRepository::deleteMember(const std::string& id) {
+bool MySQLMemberRepository::deleteMember(const std::string& id) {
     std::string query = "DELETE FROM members WHERE id = '" + id + "'";
     auto mysql = connectionPool->getConnection();
     
     if (mysql_query(mysql.get(), query.c_str())) {
-        std::cerr << "Error deleting member: " << mysql_error(mysql.get()) << std::endl;
+        throw std::runtime_error(std::string("Error deleting member: ") + mysql_error(mysql.get()));
     }
+    return mysql_affected_rows(mysql.get()) > 0;
 }

@@ -44,7 +44,7 @@ database:
   port: 3306
   username: "root"
   password: "test"
-  database: "crow_ex1"
+  database: "test"
 
 # Server Configuration
 server:
@@ -161,9 +161,15 @@ cd build && ./crow_ex1
 
 Create the required database and tables:
 
+```bash
+mysql -h 127.0.0.1 -P 3306 -u root -p < create_members_users_tables.sql
+```
+
+The script creates the `test` database with the following core tables:
+
 ```sql
-CREATE DATABASE crow_ex1;
-USE crow_ex1;
+CREATE DATABASE test;
+USE test;
 
 CREATE TABLE members (
     id VARCHAR(50) PRIMARY KEY,
@@ -171,11 +177,14 @@ CREATE TABLE members (
     gender ENUM('male', 'female') NOT NULL
 );
 
-CREATE TABLE products (
-    id VARCHAR(50) PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    price INT NOT NULL,
-    category VARCHAR(50) NOT NULL
+CREATE TABLE users (
+    id BIGINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    email VARCHAR(255) UNIQUE,
+    display_name VARCHAR(100),
+    role ENUM('user', 'admin') NOT NULL DEFAULT 'user',
+    is_active TINYINT(1) NOT NULL DEFAULT 1
 );
 ```
 
